@@ -1,6 +1,8 @@
 import os
 import logging
 import atexit
+import datetime
+import random
 
 from flask import Flask, jsonify, request
 from flask_restful import Resource, Api
@@ -9,7 +11,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from distutils.util import strtobool
 
-#from flask_sqlalchemy import SQLAlchemy
+from models import WeatherMetric
+from database import db_session, init_db
 
 app = Flask(__name__)
 api = Api(app)
@@ -23,9 +26,23 @@ scheduler = BackgroundScheduler()
 scheduler.start()
 atexit.register(lambda: scheduler.shutdown())
 
+init_db()
+
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db_session.remove()
+
 
 def generate_datapoint():
-    print("generate_datapoint is called")
+    wm = WeatherMetric(datetime.datetime.now(),
+                       round(random.uniform(0, 50), 2),  # temperature
+                       round(random.uniform(0, 100), 2),  # humidity
+                       round(random.uniform(0, 100), 2),  # precipitation
+                       round(random.uniform(0, 50), 2))  # wind
+    db_session.add(wm)
+    db_session.commit()
+
 
 @app.before_first_request
 def initialize():
@@ -38,8 +55,6 @@ def initialize():
 
 
 port = int(os.environ.get('PORT', 5000))
-
-#db = SQLAlchemy()
 
 
 class Controller(Resource):
