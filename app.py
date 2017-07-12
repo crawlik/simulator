@@ -16,14 +16,13 @@ from models import WeatherMetric
 from database import db_session, init_db
 from sqlalchemy.sql import func
 
-
 app = Flask(__name__)
 api = Api(app)
 
 logging.basicConfig(level=logging.INFO)
 
 JOB_ID = 'generate data point job'
-JOB_INTERVAL = 15
+JOB_INTERVAL = 15  # seconds
 
 scheduler = BackgroundScheduler()
 scheduler.start()
@@ -40,11 +39,12 @@ def shutdown_session(exception=None):
 def generate_datapoint():
     wm = WeatherMetric(datetime.datetime.now(),
                        round(random.uniform(0, 50), 2),  # temperature
-                       round(random.uniform(0, 100), 2), # humidity
-                       round(random.uniform(0, 100), 2), # precipitation
+                       round(random.uniform(0, 100), 2),  # humidity
+                       round(random.uniform(0, 100), 2),  # precipitation
                        round(random.uniform(0, 50), 2))  # wind
     db_session.add(wm)
     db_session.commit()
+
 
 scheduler.add_job(
     generate_datapoint,
@@ -98,7 +98,7 @@ class Summary(Resource):
             func.max(WeatherMetric.precipitation).label('max-precipitation'),
             func.avg(WeatherMetric.wind_speed).label('avg-wind-speed'),
             func.min(WeatherMetric.wind_speed).label('min-wind-speed'),
-            func.max(WeatherMetric.wind_speed).label('max-wind-speed'))\
+            func.max(WeatherMetric.wind_speed).label('max-wind-speed')) \
             .filter(WeatherMetric.collection_ts >= from_ts) \
             .filter(WeatherMetric.collection_ts <= to_ts) \
             .first()

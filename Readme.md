@@ -20,6 +20,7 @@ $ curl -XPUT 'localhost:5000/controller?on=False'
 ### Turn on
 ```bash
 $ curl -XPUT 'localhost:5000/controller?on=True'
+$ curl -XGET 'localhost:5000/controller'
 {
   "interval": 15,
   "on": false
